@@ -186,6 +186,12 @@ public class GenerateCsvFile3 {
 		}
 	}
 	
+	for (int i = wordList.size() - 1; i >= 0; i--) {
+		if (wordList.get(i).matches("[0-9]+") && wordList.get(i).length() > 2) {
+			wordList.remove(i);
+		}
+	}
+	
     return wordList;
   }
   
@@ -193,7 +199,7 @@ public class GenerateCsvFile3 {
 	  ArrayList<String> newList= new ArrayList<String>();
 
 	  for (int i = 1; i < wordList.size(); i++) {
-	      if (!newList.contains(wordList.get(i))) {
+	      if (!newList.contains(wordList.get(i).toLowerCase())) {
 	          newList.add(wordList.get(i));
 	      }
 	  } //end for loop

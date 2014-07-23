@@ -17,7 +17,7 @@ public class LoadCsv {
  
 	try {
 		connection = DriverManager
-		.getConnection("jdbc:mysql://localhost:3306/mkyongcom","root", "password");
+		.getConnection("jdbc:mysql://localhost:3306/metadata","root", "password");
  
 	} catch (SQLException e) {
 		System.out.println("Connection Failed! Check output console");
