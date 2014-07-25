@@ -167,12 +167,12 @@ public class GenerateCsvFile4 {
   private static ArrayList<String> split (ArrayList<String> wordList) {
 	  ArrayList<String> newWordList = new ArrayList<String>();
 	  for (int i = 0; i < wordList.size(); i++) {
-		  if (wordList.get(i).contains(", ")) {
+		  if (wordList.get(i).contains(", ")) { // splits entries that are separated by commas
 			  String str = wordList.get(i);
 			  ArrayList<String> smallArray = new ArrayList<String>(Arrays.asList(str.split("\\s*,\\s*")));
 			  newWordList.addAll(smallArray);
 		  }
-		  else if (wordList.get(i).contains(" > ")) {
+		  else if (wordList.get(i).contains(" > ")) { // splits entries that contain ">"
 			  String str = wordList.get(i);
 			  ArrayList<String> smallArray = new ArrayList<String>(Arrays.asList(str.split("\\s*>\\s*")));
 			  newWordList.addAll(smallArray);
@@ -189,11 +189,11 @@ public class GenerateCsvFile4 {
 	filteredWords.add("usgin");
 	filteredWords.add("document:text");
 	filteredWords.add("document:image");
-	filteredWords.add("Downloadable");
+	filteredWords.add("downloadable");
 	  
 	for (int i = wordList.size() - 1; i >= 0; i--) {
 		for (int j = 0; j < filteredWords.size(); j++) {
-			if(wordList.get(i).contains(filteredWords.get(j))) {
+			if(wordList.get(i).toLowerCase().contains(filteredWords.get(j))) {
 				wordList.remove(i);
 				break;
 			}
@@ -204,6 +204,9 @@ public class GenerateCsvFile4 {
 	exactWords.add("data");
 	exactWords.add("usa");
 	exactWords.add("usgs");
+	exactWords.add("metadata");
+	exactWords.add("map");
+	exactWords.add("north america");
 	  
 	for (int i = wordList.size() - 1; i >= 0; i--) {
 		for (int j = 0; j < exactWords.size(); j++) {
@@ -239,12 +242,23 @@ public class GenerateCsvFile4 {
   
   private static ArrayList<String> eliminateDuplicates (ArrayList<String> wordList) {
 	  ArrayList<String> newList= new ArrayList<String>();
+	  newList.add(wordList.get(0)); // initialize newList with the file name; size = 1
 
-	  for (int i = 0; i < wordList.size(); i++) {
-	      if (! (newList.contains(wordList.get(i).toLowerCase()) || (newList.contains(wordList.get(i))) ) ) {
-	          newList.add(wordList.get(i));
-	      }
+	  boolean duplicate = false;
+	  
+	  for (int i = 1; i < wordList.size(); i++) {
+		  for (int j = 0; j < newList.size(); j++) {
+			  if (newList.get(j).toLowerCase().equals(wordList.get(i).toLowerCase()) ) {
+				  duplicate = true;
+				  break;
+			  }
+		  }
+		  if (duplicate == false) {
+			  newList.add(wordList.get(i));
+		  }
+		  duplicate = false; // reset after evaluating each old word
 	  } //end for loop
+	  
 	  return newList;
   }
   
