@@ -7,16 +7,28 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
  
-public class GenerateCsvFile3 {
+public class DatabaseInsert3 {
+	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
+	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/metadata";
+	private static final String DB_USER = "root";
+	private static final String DB_PASSWORD = "";
+	private static final String SQL_INSERT = "INSERT INTO Keywords"
+			+ "(file_name, keyword) " + "VALUES"
+			+ "(?, ?)";
  
   public static void main(String argv[]) throws IOException {
 	ArrayList<String> list1 = new ArrayList<String>(listFiles("/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata"));
 	howManyFiles(list1);
-	generateCsvFile(list1);
+	generateTable(list1);
 	confirmationDone();
   }
 	 
@@ -40,10 +52,10 @@ public class GenerateCsvFile3 {
 					}
 				} //end adding files to xmlList
 				
-				if (listOfFiles[i].isDirectory())
+				/*if (listOfFiles[i].isDirectory())
 				{
 					xmlList.addAll(listFiles(listOfFiles[i].getAbsolutePath()));
-				} //end recursion for directories
+				} //end recursion for directories*/
 			} //end for
 			
 			return xmlList;
@@ -61,23 +73,15 @@ public class GenerateCsvFile3 {
 	  }
   }
   
-  private static void generateCsvFile(ArrayList<String> xmlList) {
+  private static void generateTable(ArrayList<String> xmlList) {
 	try {
-	  FileWriter writer = new FileWriter("/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv");
-	  writer.append("File Name");
-	  writer.append(',');
-	  writer.append("Keywords");
-	  writer.append('\n');
-
-	  writer.flush();
-	  writer.close(); //open and close new csv file
 	  
 	  for (int a = 0; a < xmlList.size(); a++) {
 		  ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a)));
 		  //generate list of keywords for a xml file
 		  filter(keywords);
 		  ArrayList<String> finalKeywords = new ArrayList<String>(eliminateDuplicates(keywords));
-		  appendKeywords(finalKeywords);
+		  insertRecordIntoDbUserTable(finalKeywords);
 	  } //end appending keywords for each xml file loop
 	  
 	} //end try
@@ -206,35 +210,65 @@ public class GenerateCsvFile3 {
 	  return newList;
   }
   
-  private static void appendKeywords(ArrayList<String> keywordList) {
-	try {  
-	  FileWriter writer = new FileWriter("/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv", true);
-	  
-	  if (keywordList.size() > 1) {
-		  for (int b = 0; b < keywordList.size() - 1; b++) {
-			  writer.append(keywordList.get(b));
-			  writer.append(',');
-		  }
-		  writer.append(keywordList.get( keywordList.size() - 1 ));
-		  writer.append('\n');
-	  }
-	  else if (keywordList.size() == 1) {
-		  writer.append(keywordList.get(0));
-		  writer.append(',');
-		  writer.append("");
-		  writer.append('\n');
-	  }
-	  
-	  writer.flush();
-	  writer.close();
-	} //end try
-	
-	catch (Exception e) {
-		e.printStackTrace();
+  private static void insertRecordIntoDbUserTable(ArrayList<String> xmlKeywords) throws SQLException {
+
+		Connection dbConnection = null;
+		PreparedStatement statement = null;
+
+		try {
+			dbConnection = getDBConnection();
+			statement = dbConnection.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS);
+			
+			if (xmlKeywords.size() == 1) {
+				statement.setString(1, xmlKeywords.get(0));
+				statement.setString(2, "");
+				statement.execute();
+			}
+			
+				for (int i = 1; i < xmlKeywords.size(); i++) {
+		            statement.setString(1, xmlKeywords.get(0));
+		            statement.setString(2, xmlKeywords.get(i));
+		            statement.addBatch();
+		            if ((i + 1) % 1000 == 0) {
+		                statement.executeBatch(); // Execute every 1000 items.
+		            }
+		        }
+		        statement.executeBatch();
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			if (statement != null) {
+				statement.close();
+			}
+			if (dbConnection != null) {
+				dbConnection.close();
+			}
 		}
-  }
+	}
+
+	private static Connection getDBConnection() {
+
+		Connection dbConnection = null;
+
+		try {
+			Class.forName(DB_DRIVER);
+		} catch (ClassNotFoundException e) {
+			System.out.println(e.getMessage());
+		}
+
+		try {
+			dbConnection = DriverManager.getConnection(
+					DB_CONNECTION, DB_USER,DB_PASSWORD);
+			return dbConnection;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return dbConnection;
+	}
   
   private static void confirmationDone() {
-	  System.out.println("The .csv file has been successfully generated.");
+	  System.out.println("The records have been inserted into the Keywords table.");
   }
 } //end class

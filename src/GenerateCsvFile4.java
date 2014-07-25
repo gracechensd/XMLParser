@@ -10,8 +10,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
  
-public class GenerateCsvFile3 {
+public class GenerateCsvFile4 {
  
   public static void main(String argv[]) throws IOException {
 	ArrayList<String> list1 = new ArrayList<String>(listFiles("/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata"));
@@ -75,8 +76,7 @@ public class GenerateCsvFile3 {
 	  for (int a = 0; a < xmlList.size(); a++) {
 		  ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a)));
 		  //generate list of keywords for a xml file
-		  filter(keywords);
-		  ArrayList<String> finalKeywords = new ArrayList<String>(eliminateDuplicates(keywords));
+		  ArrayList<String> finalKeywords = new ArrayList<String>(curate(keywords));
 		  appendKeywords(finalKeywords);
 	  } //end appending keywords for each xml file loop
 	  
@@ -109,7 +109,7 @@ public class GenerateCsvFile3 {
 			  Node nNode = nList.item(i);
 			  if (nNode != null && nNode.getNodeType() == Node.ELEMENT_NODE) {
 				  Element eElement = (Element) nNode;
-				  results.add(eElement.getTextContent());
+				  results.add(eElement.getTextContent().trim());
 			  }
 		  } //end dc:subject
 		  
@@ -126,7 +126,7 @@ public class GenerateCsvFile3 {
 					  Node nNode22 = nList22.item(j);
 					  if (nNode22 != null && nNode22.getNodeType() == Node.ELEMENT_NODE) {
 						  Element eElement22 = (Element) nNode22;
-						  results.add(eElement22.getTextContent());
+						  results.add(eElement22.getTextContent().trim());
 					  }
 				  } //end gco:CharacterString loop
 				  
@@ -155,8 +155,36 @@ public class GenerateCsvFile3 {
 
   }
  
-  private static ArrayList<String> filter (ArrayList<String> wordList)
-  {
+  
+  private static ArrayList<String> curate (ArrayList<String> wordList) {
+	  ArrayList<String> wordList2 = new ArrayList<String>(split(wordList));
+	  ArrayList<String> wordList3 = new ArrayList<String>(filter(wordList2));
+	  ArrayList<String> wordList4 = new ArrayList<String>(eliminateDuplicates(wordList3));
+	  checkLength(wordList4);
+	  return wordList4;
+  }
+  
+  private static ArrayList<String> split (ArrayList<String> wordList) {
+	  ArrayList<String> newWordList = new ArrayList<String>();
+	  for (int i = 0; i < wordList.size(); i++) {
+		  if (wordList.get(i).contains(", ")) {
+			  String str = wordList.get(i);
+			  ArrayList<String> smallArray = new ArrayList<String>(Arrays.asList(str.split("\\s*,\\s*")));
+			  newWordList.addAll(smallArray);
+		  }
+		  else if (wordList.get(i).contains(" > ")) {
+			  String str = wordList.get(i);
+			  ArrayList<String> smallArray = new ArrayList<String>(Arrays.asList(str.split("\\s*>\\s*")));
+			  newWordList.addAll(smallArray);
+		  }
+		  else {
+			  newWordList.add(wordList.get(i));
+		  }
+	  }
+	  return newWordList;
+  }
+  
+  private static ArrayList<String> filter (ArrayList<String> wordList) {
 	ArrayList<String> filteredWords = new ArrayList<String>();
 	filteredWords.add("usgin");
 	filteredWords.add("document:text");
@@ -186,25 +214,40 @@ public class GenerateCsvFile3 {
 		}
 	}
 	
-	for (int i = wordList.size() - 1; i >= 0; i--) {
-		if (wordList.get(i).matches("[0-9]+") && wordList.get(i).length() > 2) {
+	for (int i = wordList.size() - 1; i >= 1; i--) {
+		if (wordList.get(i).matches("[0-9]+")) {
 			wordList.remove(i);
 		}
-	}
+	} //filters out purely numeric keywords for all but file name
+	
+	for (int i = wordList.size() - 1; i >= 1; i--) {
+		if (wordList.get(i).matches("[Q]{1}[0-9]{7}|[A-Z]{4}[0-9]{1}|[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{1}")) {
+			wordList.remove(i);
+		}
+	} // filters out formats Q1234567 and ABCD1 and T8N110W for all but file name
 	
     return wordList;
+  }
+  
+  private static void checkLength (ArrayList<String> wordList) {
+	  for (int i = 0; i < wordList.size(); i++) {
+			if (wordList.get(i).length() > 150) {
+				System.out.println(wordList.get(0) + ", " + wordList.get(i) + ", " + wordList.get(i).length());
+			}
+		}
   }
   
   private static ArrayList<String> eliminateDuplicates (ArrayList<String> wordList) {
 	  ArrayList<String> newList= new ArrayList<String>();
 
 	  for (int i = 0; i < wordList.size(); i++) {
-	      if (!newList.contains(wordList.get(i).toLowerCase())) {
+	      if (! (newList.contains(wordList.get(i).toLowerCase()) || (newList.contains(wordList.get(i))) ) ) {
 	          newList.add(wordList.get(i));
 	      }
 	  } //end for loop
 	  return newList;
   }
+  
   
   private static void appendKeywords(ArrayList<String> keywordList) {
 	try {  
