@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
  
 public class GenerateCsvFile4 {
+	private static final String XML_FILE_DIRECTORY = "/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata";
+	private static final String CSV_FILE = "/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv";
  
   public static void main(String argv[]) throws IOException {
-	ArrayList<String> list1 = new ArrayList<String>(listFiles("/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata"));
+	ArrayList<String> list1 = new ArrayList<String>(listFiles(XML_FILE_DIRECTORY));
 	howManyFiles(list1);
 	generateCsvFile(list1);
 	confirmationDone();
@@ -47,7 +49,7 @@ public class GenerateCsvFile4 {
 				} //end recursion for directories
 			} //end for
 			
-			return xmlList;
+			return xmlList; // list of absolute paths of each xml file
 	  
   }
   
@@ -64,7 +66,7 @@ public class GenerateCsvFile4 {
   
   private static void generateCsvFile(ArrayList<String> xmlList) {
 	try {
-	  FileWriter writer = new FileWriter("/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv");
+	  FileWriter writer = new FileWriter(CSV_FILE);
 	  writer.append("File Name");
 	  writer.append(',');
 	  writer.append("Keywords");
@@ -73,11 +75,10 @@ public class GenerateCsvFile4 {
 	  writer.flush();
 	  writer.close(); //open and close new csv file
 	  
-	  for (int a = 0; a < xmlList.size(); a++) {
-		  ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a)));
-		  //generate list of keywords for a xml file
-		  ArrayList<String> finalKeywords = new ArrayList<String>(curate(keywords));
-		  appendKeywords(finalKeywords);
+	  for (int a = 0; a < xmlList.size(); a++) { // for each xml file
+		  ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a))); // get the file's keywords
+		  ArrayList<String> finalKeywords = new ArrayList<String>(curate(keywords)); // filter keywords
+		  appendKeywords(finalKeywords); // write to csv file
 	  } //end appending keywords for each xml file loop
 	  
 	} //end try
@@ -265,7 +266,7 @@ public class GenerateCsvFile4 {
   
   private static void appendKeywords(ArrayList<String> keywordList) {
 	try {  
-	  FileWriter writer = new FileWriter("/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv", true);
+	  FileWriter writer = new FileWriter(CSV_FILE, true); // append to csv file
 	  
 	  if (keywordList.size() > 1) {
 		  for (int b = 0; b < keywordList.size() - 1; b++) {

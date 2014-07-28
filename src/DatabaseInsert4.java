@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
  
 public class DatabaseInsert4 {
+	private static final String XML_FILE_DIRECTORY = "/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata";
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
 	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/metadata";
 	private static final String DB_USER = "root";
@@ -27,7 +28,7 @@ public class DatabaseInsert4 {
  
   public static void main(String argv[]) throws IOException {
 	try {
-		ArrayList<String> list1 = new ArrayList<String>(listFiles("/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata"));
+		ArrayList<String> list1 = new ArrayList<String>(listFiles(XML_FILE_DIRECTORY));
 		howManyFiles(list1);
 		insertRecordIntoDbUserTable(list1);
 		confirmationDone();
@@ -62,7 +63,7 @@ public class DatabaseInsert4 {
 				} //end recursion for directories
 			} //end for
 			
-			return xmlList;
+			return xmlList; // list of absolute paths of each xml file
 	  
   }
   
@@ -236,14 +237,14 @@ public class DatabaseInsert4 {
 
 	  boolean duplicate = false;
 	  
-	  for (int i = 1; i < wordList.size(); i++) {
-		  for (int j = 0; j < newList.size(); j++) {
+	  for (int i = 1; i < wordList.size(); i++) { //compare next keyword
+		  for (int j = 0; j < newList.size(); j++) { //to all previous keywords
 			  if (newList.get(j).toLowerCase().equals(wordList.get(i).toLowerCase()) ) {
 				  duplicate = true;
-				  break;
+				  break; // exits inner loop, no need to check for further duplicates beyond this one because they've already been checked
 			  }
 		  }
-		  if (duplicate == false) {
+		  if (duplicate == false) { //only add keyword to newlist if not a duplicate
 			  newList.add(wordList.get(i));
 		  }
 		  duplicate = false; // reset after evaluating each old word
@@ -254,7 +255,8 @@ public class DatabaseInsert4 {
   
   
   private static void insertRecordIntoDbUserTable(ArrayList<String> xmlList) throws SQLException {
-
+	  	// generates rows in table with file name and one keyword
+	  
 		Connection dbConnection = null;
 		PreparedStatement statement = null;
 
@@ -264,13 +266,12 @@ public class DatabaseInsert4 {
 			
 			int batchSize = 0;
 			
-			for (int a = 0; a < xmlList.size(); a++) {
-				ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a)));
-				//generate list of keywords for a xml file
-				ArrayList<String> xmlKeywords = new ArrayList<String>(curate(keywords));
+			for (int a = 0; a < xmlList.size(); a++) { // for each xml file
+				ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a))); //gets the file's keywords
+				ArrayList<String> xmlKeywords = new ArrayList<String>(curate(keywords)); //filter keywords
 
 				 //start appending keywords of that xml file to database
-				if (xmlKeywords.size() == 1) {
+				if (xmlKeywords.size() == 1) { //if xml file has no keywords and thus list only consists of the file name
 					statement.setString(1, xmlKeywords.get(0));
 					statement.setString(2, "");
 					statement.addBatch();
@@ -278,8 +279,8 @@ public class DatabaseInsert4 {
 				}
 
 				for (int i = 1; i < xmlKeywords.size(); i++) {
-					statement.setString(1, xmlKeywords.get(0));
-					statement.setString(2, xmlKeywords.get(i));
+					statement.setString(1, xmlKeywords.get(0)); //set file name
+					statement.setString(2, xmlKeywords.get(i)); //set keyword
 					statement.addBatch();
 					batchSize++;
 					if ((i) % 1000 == 0) {
