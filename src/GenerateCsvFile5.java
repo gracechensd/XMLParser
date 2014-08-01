@@ -6,20 +6,27 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
  
-public class GenerateCsvFile4 {
+public class GenerateCsvFile5 {
 	private static final String XML_FILE_DIRECTORY = "/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata";
 	private static final String CSV_FILE = "/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv";
-	private static boolean recursive = true;
+	private static final String FILTER = "/Users/grace/F/Real Life/Internship 2014/workspace/XmlParse/filter.txt";
+	private static ArrayList<String> filteredWords = new ArrayList<String>();
+	private static ArrayList<String> exactWords = new ArrayList<String>();
+	private static boolean recursive = true; // true: process all subdirectories as well
 	
   public static void main(String argv[]) throws IOException {
 	ArrayList<String> list1 = new ArrayList<String>(listFiles(XML_FILE_DIRECTORY));
 	howManyFiles(list1);
+	generateFilter(FILTER);
 	generateCsvFile(list1);
 	confirmationDone();
   }
@@ -63,6 +70,26 @@ public class GenerateCsvFile4 {
 	  {
 		  System.out.println(bigList.size() + " files found");
 	  }
+  }
+  
+  private static void generateFilter(String fileName) {
+	  try(BufferedReader br = new BufferedReader(new FileReader(FILTER))) {
+		  for(String line; (line = br.readLine()) != null; ) {
+			  if (line.startsWith("# ")) {
+				  filteredWords.add(line.substring(2,line.length())); // add to partial match
+			  }
+			  if (line.startsWith("$ ")) {
+				  exactWords.add(line.substring(2,line.length())); // add to exact match
+			  }
+		  }
+		  br.close();
+		  
+	  } catch (FileNotFoundException e) {
+		  e.printStackTrace();
+	  } catch (IOException e) {
+		  e.printStackTrace();
+	  }
+		  // line is not visible here.
   }
   
   private static void generateCsvFile(ArrayList<String> xmlList) {
@@ -187,51 +214,39 @@ public class GenerateCsvFile4 {
   }
   
   private static ArrayList<String> filter (ArrayList<String> wordList) {
-	ArrayList<String> filteredWords = new ArrayList<String>();
-	filteredWords.add("usgin");
-	filteredWords.add("document:text");
-	filteredWords.add("document:image");
-	filteredWords.add("downloadable");
-	  
-	for (int i = wordList.size() - 1; i >= 0; i--) {
-		for (int j = 0; j < filteredWords.size(); j++) {
-			if(wordList.get(i).toLowerCase().contains(filteredWords.get(j))) {
-				wordList.remove(i);
-				break;
-			}
-		}
-	}
-	
-	ArrayList<String> exactWords = new ArrayList<String>();
-	exactWords.add("data");
-	exactWords.add("usa");
-	exactWords.add("usgs");
-	exactWords.add("metadata");
-	exactWords.add("map");
-	exactWords.add("north america");
-	  
-	for (int i = wordList.size() - 1; i >= 0; i--) {
-		for (int j = 0; j < exactWords.size(); j++) {
-			if(wordList.get(i).toLowerCase().equals(exactWords.get(j))) {
-				wordList.remove(i);
-				break;
-			}
-		}
-	}
-	
-	for (int i = wordList.size() - 1; i >= 1; i--) {
-		if (wordList.get(i).matches("[0-9]+")) {
-			wordList.remove(i);
-		}
-	} //filters out purely numeric keywords for all but file name
-	
-	for (int i = wordList.size() - 1; i >= 1; i--) {
-		if (wordList.get(i).matches("[Q]{1}[0-9]{7}|[A-Z]{4}[0-9]{1}|[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{1}")) {
-			wordList.remove(i);
-		}
-	} // filters out formats Q1234567 and ABCD1 and T8N110W for all but file name
-	
-    return wordList;
+
+	  for (int i = wordList.size() - 1; i >= 0; i--) { // filter partial match
+		  for (int j = 0; j < filteredWords.size(); j++) {
+			  if(wordList.get(i).toLowerCase().contains(filteredWords.get(j))) {
+				  wordList.remove(i);
+				  break;
+			  }
+		  }
+	  }
+
+	  for (int i = wordList.size() - 1; i >= 0; i--) { // filter exact match
+		  for (int j = 0; j < exactWords.size(); j++) {
+			  if(wordList.get(i).toLowerCase().equals(exactWords.get(j))) {
+				  wordList.remove(i);
+				  break;
+			  }
+		  }
+	  }
+
+	  for (int i = wordList.size() - 1; i >= 1; i--) {
+		  if (wordList.get(i).matches("[0-9]+")) {
+			  wordList.remove(i);
+		  }
+	  } //filters out purely numeric keywords for all but file name
+
+	  for (int i = wordList.size() - 1; i >= 1; i--) {
+		  if (wordList.get(i).matches("[Q]{1}[0-9]{7}|[A-Z]{4}[0-9]{1}|[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{1}")) {
+			  wordList.remove(i);
+		  }
+	  } // filters out formats Q1234567 and ABCD1 and T8N110W for all but file name
+
+	  return wordList;
+
   }
   
   private static void checkLength (ArrayList<String> wordList) {

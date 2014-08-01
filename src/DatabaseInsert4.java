@@ -22,10 +22,11 @@ public class DatabaseInsert4 {
 	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/metadata";
 	private static final String DB_USER = "root";
 	private static final String DB_PASSWORD = "";
-	private static final String SQL_INSERT = "INSERT INTO Keywords"
+	private static final String SQL_INSERT = "INSERT INTO Keywords2"
 			+ "(file_name, keyword) " + "VALUES"
 			+ "(?, ?)";
- 
+	private static boolean recursive = true;
+	
   public static void main(String argv[]) throws IOException {
 	try {
 		ArrayList<String> list1 = new ArrayList<String>(listFiles(XML_FILE_DIRECTORY));
@@ -57,7 +58,7 @@ public class DatabaseInsert4 {
 					}
 				} //end adding files to xmlList
 				
-				if (listOfFiles[i].isDirectory())
+				if (recursive == true && listOfFiles[i].isDirectory())
 				{
 					xmlList.addAll(listFiles(listOfFiles[i].getAbsolutePath()));
 				} //end recursion for directories
@@ -278,7 +279,7 @@ public class DatabaseInsert4 {
 					batchSize++;
 				}
 
-				for (int i = 1; i < xmlKeywords.size(); i++) {
+				for (int i = 1; i < xmlKeywords.size(); i++) { //for each keyword following the file name
 					statement.setString(1, xmlKeywords.get(0)); //set file name
 					statement.setString(2, xmlKeywords.get(i)); //set keyword
 					statement.addBatch();

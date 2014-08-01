@@ -6,22 +6,43 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
  
-public class GenerateCsvFile4 {
+public class DatabaseInsert5 {
 	private static final String XML_FILE_DIRECTORY = "/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata";
-	private static final String CSV_FILE = "/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv";
-	private static boolean recursive = true;
+	private static final String FILTER = "/Users/grace/F/Real Life/Internship 2014/workspace/XmlParse/filter.txt";
+	private static ArrayList<String> filteredWords = new ArrayList<String>();
+	private static ArrayList<String> exactWords = new ArrayList<String>();
+	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
+	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/metadata";
+	private static final String DB_USER = "root";
+	private static final String DB_PASSWORD = "";
+	private static final String SQL_INSERT = "INSERT INTO Keywords2"
+			+ "(file_name, keyword) " + "VALUES"
+			+ "(?, ?)";
+	private static boolean recursive = true; // true: process all subdirectories as well
 	
   public static void main(String argv[]) throws IOException {
-	ArrayList<String> list1 = new ArrayList<String>(listFiles(XML_FILE_DIRECTORY));
-	howManyFiles(list1);
-	generateCsvFile(list1);
-	confirmationDone();
+	try {
+		ArrayList<String> list1 = new ArrayList<String>(listFiles(XML_FILE_DIRECTORY));
+		howManyFiles(list1);
+		generateFilter(FILTER);
+		insertRecordIntoDbUserTable(list1);
+		confirmationDone();
+	} catch (SQLException e) {
+		e.printStackTrace();
+	}
   }
 	 
   private static ArrayList<String> listFiles(String path){
@@ -65,28 +86,24 @@ public class GenerateCsvFile4 {
 	  }
   }
   
-  private static void generateCsvFile(ArrayList<String> xmlList) {
-	try {
-	  FileWriter writer = new FileWriter(CSV_FILE);
-	  writer.append("File Name");
-	  writer.append(',');
-	  writer.append("Keywords");
-	  writer.append('\n');
-
-	  writer.flush();
-	  writer.close(); //open and close new csv file
-	  
-	  for (int a = 0; a < xmlList.size(); a++) { // for each xml file
-		  ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a))); // get the file's keywords
-		  ArrayList<String> finalKeywords = new ArrayList<String>(curate(keywords)); // filter keywords
-		  appendKeywords(finalKeywords); // write to csv file
-	  } //end appending keywords for each xml file loop
-	  
-	} //end try
-	
-	catch (Exception e) {
-		e.printStackTrace();
-		}
+  private static void generateFilter(String fileName) {
+	  try(BufferedReader br = new BufferedReader(new FileReader(FILTER))) {
+		  for(String line; (line = br.readLine()) != null; ) {
+			  if (line.startsWith("# ")) {
+				  filteredWords.add(line.substring(2,line.length())); // add to partial match
+			  }
+			  if (line.startsWith("$ ")) {
+				  exactWords.add(line.substring(2,line.length())); // add to exact match
+			  }
+		  }
+		  br.close();
+		  
+	  } catch (FileNotFoundException e) {
+		  e.printStackTrace();
+	  } catch (IOException e) {
+		  e.printStackTrace();
+	  }
+		  // line is not visible here.
   }
   
   private static ArrayList<String> generateKeywords(String sFileName) {
@@ -187,51 +204,39 @@ public class GenerateCsvFile4 {
   }
   
   private static ArrayList<String> filter (ArrayList<String> wordList) {
-	ArrayList<String> filteredWords = new ArrayList<String>();
-	filteredWords.add("usgin");
-	filteredWords.add("document:text");
-	filteredWords.add("document:image");
-	filteredWords.add("downloadable");
-	  
-	for (int i = wordList.size() - 1; i >= 0; i--) {
-		for (int j = 0; j < filteredWords.size(); j++) {
-			if(wordList.get(i).toLowerCase().contains(filteredWords.get(j))) {
-				wordList.remove(i);
-				break;
-			}
-		}
-	}
-	
-	ArrayList<String> exactWords = new ArrayList<String>();
-	exactWords.add("data");
-	exactWords.add("usa");
-	exactWords.add("usgs");
-	exactWords.add("metadata");
-	exactWords.add("map");
-	exactWords.add("north america");
-	  
-	for (int i = wordList.size() - 1; i >= 0; i--) {
-		for (int j = 0; j < exactWords.size(); j++) {
-			if(wordList.get(i).toLowerCase().equals(exactWords.get(j))) {
-				wordList.remove(i);
-				break;
-			}
-		}
-	}
-	
-	for (int i = wordList.size() - 1; i >= 1; i--) {
-		if (wordList.get(i).matches("[0-9]+")) {
-			wordList.remove(i);
-		}
-	} //filters out purely numeric keywords for all but file name
-	
-	for (int i = wordList.size() - 1; i >= 1; i--) {
-		if (wordList.get(i).matches("[Q]{1}[0-9]{7}|[A-Z]{4}[0-9]{1}|[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{1}")) {
-			wordList.remove(i);
-		}
-	} // filters out formats Q1234567 and ABCD1 and T8N110W for all but file name
-	
-    return wordList;
+
+	  for (int i = wordList.size() - 1; i >= 0; i--) { // filter partial match
+		  for (int j = 0; j < filteredWords.size(); j++) {
+			  if(wordList.get(i).toLowerCase().contains(filteredWords.get(j))) {
+				  wordList.remove(i);
+				  break;
+			  }
+		  }
+	  }
+
+	  for (int i = wordList.size() - 1; i >= 0; i--) { // filter exact match
+		  for (int j = 0; j < exactWords.size(); j++) {
+			  if(wordList.get(i).toLowerCase().equals(exactWords.get(j))) {
+				  wordList.remove(i);
+				  break;
+			  }
+		  }
+	  }
+
+	  for (int i = wordList.size() - 1; i >= 1; i--) {
+		  if (wordList.get(i).matches("[0-9]+")) {
+			  wordList.remove(i);
+		  }
+	  } //filters out purely numeric keywords for all but file name
+
+	  for (int i = wordList.size() - 1; i >= 1; i--) {
+		  if (wordList.get(i).matches("[Q]{1}[0-9]{7}|[A-Z]{4}[0-9]{1}|[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{1}")) {
+			  wordList.remove(i);
+		  }
+	  } // filters out formats Q1234567 and ABCD1 and T8N110W for all but file name
+
+	  return wordList;
+
   }
   
   private static void checkLength (ArrayList<String> wordList) {
@@ -265,35 +270,81 @@ public class GenerateCsvFile4 {
   }
   
   
-  private static void appendKeywords(ArrayList<String> keywordList) {
-	try {  
-	  FileWriter writer = new FileWriter(CSV_FILE, true); // append to csv file
+  private static void insertRecordIntoDbUserTable(ArrayList<String> xmlList) throws SQLException {
+	  	// generates rows in table with file name and one keyword
 	  
-	  if (keywordList.size() > 1) {
-		  for (int b = 0; b < keywordList.size() - 1; b++) {
-			  writer.append(keywordList.get(b));
-			  writer.append(',');
-		  }
-		  writer.append(keywordList.get( keywordList.size() - 1 ));
-		  writer.append('\n');
-	  }
-	  else if (keywordList.size() == 1) {
-		  writer.append(keywordList.get(0));
-		  writer.append(',');
-		  writer.append("");
-		  writer.append('\n');
-	  }
-	  
-	  writer.flush();
-	  writer.close();
-	} //end try
-	
-	catch (Exception e) {
-		e.printStackTrace();
+		Connection dbConnection = null;
+		PreparedStatement statement = null;
+
+		try {
+			dbConnection = getDBConnection();
+			statement = dbConnection.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS);
+			
+			int batchSize = 0;
+			
+			for (int a = 0; a < xmlList.size(); a++) { // for each xml file
+				ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a))); //gets the file's keywords
+				ArrayList<String> xmlKeywords = new ArrayList<String>(curate(keywords)); //filter keywords
+
+				 //start appending keywords of that xml file to database
+				if (xmlKeywords.size() == 1) { //if xml file has no keywords and thus list only consists of the file name
+					statement.setString(1, xmlKeywords.get(0));
+					statement.setString(2, "");
+					statement.addBatch();
+					batchSize++;
+				}
+
+				for (int i = 1; i < xmlKeywords.size(); i++) { //for each keyword following the file name
+					statement.setString(1, xmlKeywords.get(0)); //set file name
+					statement.setString(2, xmlKeywords.get(i)); //set keyword
+					statement.addBatch();
+					batchSize++;
+					if ((i) % 1000 == 0) {
+						statement.executeBatch(); // Execute every 1000 items.
+					}
+				}
+				if (batchSize >= 1000) {
+					statement.executeBatch();
+					batchSize = 0;
+				}
+				//end appending keywords for each xml file loop
+			} //end loop of generating table for all xml files and keywords
+			statement.executeBatch();
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			if (statement != null) {
+				statement.close();
+			}
+			if (dbConnection != null) {
+				dbConnection.close();
+			}
 		}
-  }
+	}
+
+	private static Connection getDBConnection() {
+
+		Connection dbConnection = null;
+
+		try {
+			Class.forName(DB_DRIVER);
+		} catch (ClassNotFoundException e) {
+			System.out.println(e.getMessage());
+		}
+
+		try {
+			dbConnection = DriverManager.getConnection(
+					DB_CONNECTION, DB_USER,DB_PASSWORD);
+			return dbConnection;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return dbConnection;
+	}
   
   private static void confirmationDone() {
-	  System.out.println("The .csv file has been successfully generated.");
+	  System.out.println("The records have been inserted into the Keywords table.");
   }
 } //end class

@@ -1,0 +1,17 @@
+Begin all partially-filtered words with a hashtag and a space. Any keywords containing these words will be filtered out.
+
+# usgin
+# document:text
+# document:image
+# downloadable
+# keyword
+
+
+Begin all exactly-filtered words with a dollar sign and a space. Any keywords that match any of these words exactly will be filtered out.
+
+$ data
+$ usa
+$ usgs
+$ metadata
+$ map
+$ north america
