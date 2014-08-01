@@ -257,6 +257,7 @@ public class GenerateCsvFile5 {
 		}
   }
   
+  
   private static ArrayList<String> eliminateDuplicates (ArrayList<String> wordList) {
 	  ArrayList<String> newList= new ArrayList<String>();
 	  newList.add(wordList.get(0)); // initialize newList with the file name; size = 1
@@ -278,6 +279,7 @@ public class GenerateCsvFile5 {
 	  
 	  return newList;
   }
+  
   
   
   private static void appendKeywords(ArrayList<String> keywordList) {

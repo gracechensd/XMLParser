@@ -1,0 +1,25 @@
+File Name,URIs
+003AFA2F-DDC7-4C10-81FA-F7BC515A24FE.xml,
+0937A6F9-22F7-4902-86C6-7AC2D3F5CDA5.xml,
+2003EC27-E856-4119-9985-7CB7EA98BD45.xml,
+4760D3C7-0D1B-434E-BE85-711C910658CB.xml,
+4A6A1EB8-0369-4565-88C2-1D69964522DA.xml,
+4E1C97D2-A003-4138-B776-9C4C9FFCCF7A.xml,
+52C43001-435E-46D5-AF84-BAE1B8E7F3F2.xml,http://earthcube.org/gcmd#Oceans,http://sweet.jpl.nasa.gov/2.2/realm.owl#Ocean,http://earthcube.org/gcmd#Tsunamis,http://sweet.jpl.nasa.gov/2.2/phenOceanDynamics.owl#Tsunami,http://earthcube.org/gcmd#Tides,http://sweet.jpl.nasa.gov/2.2/phenPlanetOscillation.owl#Tide
+5F6BBAB3-DCAF-4DCA-B3EC-FCC063B38D63.xml,
+6C04FF02-FC95-4685-9C6D-0833D00F21DB.xml,http://earthcube.org/gcmd#Oceans,http://sweet.jpl.nasa.gov/2.2/realm.owl#Ocean
+6C7A1CE0-EB1D-4EDC-8942-246D4E357827.xml,
+7769AEC5-B8D5-4795-8860-8AEEC8985AAF.xml,
+7916622E-1426-47E4-BD97-A3C109BEBD09.xml,http://earthcube.org/gcmd#Heat,http://sweet.jpl.nasa.gov/2.2/procPhysical.owl#Heating,http://sweet.jpl.nasa.gov/2.2/phenAtmo.owl#Thermal,http://sweet.jpl.nasa.gov/2.2/quanEnergy.owl#Heat,http://sweet.jpl.nasa.gov/2.2/realmLandVolcanic.owl#Geothermal,http://sweet.jpl.nasa.gov/2.2/phenEnergy.owl#Geothermal,http://sweet.jpl.nasa.gov/2.2/procPhysical.owl#heat
+869A1581-07D3-41E4-832C-1FFE02E27E1E.xml,http://earthcube.org/ships#32WO
+8D18D167-1217-4E29-A218-61504638AD2E.xml,
+942B5085-D674-4AF8-A147-86BCE8CF6A2D.xml,
+97FA925F-5743-4F74-92D7-3EB13636BC4F.xml,
+AFC18228-7C76-4C2B-9696-3694E82342B0.xml,
+B833A04D-E4F0-42F9-BC32-86E680B69EDC.xml,
+CE9CBBA8-EFCE-4921-96AA-A6041F44108F.xml,http://sweet.jpl.nasa.gov/2.2/quanIndex.owl#Index,http://earthcube.org/gcmd#Marine,http://earthcube.org/ships#31LS,http://sweet.jpl.nasa.gov/2.2/humanResearch.owl#Sample,http://sweet.jpl.nasa.gov/2.2/stateRole.owl#Sample,http://sweet.jpl.nasa.gov/2.2/reprMathStatistics.owl#Sampling
+D567AE28-EDCD-4926-85AE-E3DB97ED43B2.xml,
+DC1138FB-8DDE-48EC-994C-69DEFB19F1A6.xml,
+E75B4362-3DF5-4C4F-A7B5-F9DB302E43D6.xml,
+E82D2249-BFC6-4194-804C-87D032F31AE9.xml,http://sweet.jpl.nasa.gov/2.2/reprSpaceCoordinate.owl#Elevation,http://sweet.jpl.nasa.gov/2.2/quanSpaceHeight.owl#Elevation
+F7C7B122-825A-4A15-A7C4-FF8DB0C39CD1.xml,

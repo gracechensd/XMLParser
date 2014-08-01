@@ -271,7 +271,7 @@ public class DatabaseInsert5 {
   
   
   private static void insertRecordIntoDbUserTable(ArrayList<String> xmlList) throws SQLException {
-	  	// generates rows in table with file name and one keyword
+	  	// generates rows in table, each with file name and one keyword
 	  
 		Connection dbConnection = null;
 		PreparedStatement statement = null;
