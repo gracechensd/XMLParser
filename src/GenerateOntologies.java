@@ -1,3 +1,11 @@
+/*
+ * Parses xml files for keywords, filters them, and then generates
+ * a list of ontologies in the form of URIs for each xml file based
+ * on those keywords. Writes keywords to keywords.csv, and ontologies to uris.csv.
+ * Path names for the xml files’ location, keywords.csv, and filter.txt
+ * are specific to Grace’s computer.
+ */
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 
@@ -20,12 +28,14 @@ import java.util.Arrays;
  
 public class GenerateOntologies {
 	private static final String XML_FILE_DIRECTORY = "/Users/grace/F/Real Life/Internship 2014/XMLParse/cinergi_metadata";
-	private static final String CSV_FILE = "/Users/grace/F/Real Life/Internship 2014/XMLParse/results.csv";
+	private static final String CSV_FILE = "/Users/grace/F/Real Life/Internship 2014/XMLParse/keywords.csv";
 	private static final String CSV_FILE_URIs = "/Users/grace/F/Real Life/Internship 2014/XMLParse/uris.csv";
 	private static final String FILTER = "/Users/grace/F/Real Life/Internship 2014/workspace/XmlParse/filter.txt";
 	private static ArrayList<String> filteredWords = new ArrayList<String>();
 	private static ArrayList<String> exactWords = new ArrayList<String>();
 	private static boolean recursive = true; // true: process all subdirectories as well
+	private static boolean keyword_csv = true; // true: generate csv file for keywords
+	private static boolean ontology_csv = true; // true: generate csv file for ontologies
 	
   public static void main(String argv[]) throws IOException {
 	ArrayList<String> list1 = new ArrayList<String>(listFiles(XML_FILE_DIRECTORY));
@@ -34,7 +44,12 @@ public class GenerateOntologies {
 	generateFiles(list1);
 	confirmationDone();
   }
-	 
+  
+  /*
+   * Goes through XML_FILE_DIRECTORY and returns a list of all files
+   * by their absolute paths. Goes through subdirectories as well if
+   * boolean recursive is true.
+   */
   private static ArrayList<String> listFiles(String path){
 	  
 	// Directory path here
@@ -65,17 +80,24 @@ public class GenerateOntologies {
 	  
   }
   
+  /*
+  * Checks how many files, returns string if no files found, else returns number of files
+  */
   private static void howManyFiles(ArrayList<String> bigList) {
-	  if (bigList.size() == 0)
-	  {
+	  if (bigList.size() == 0) {
 		  System.out.println("No files found!");
 	  }
-	  else
-	  {
+	  else {
 		  System.out.println(bigList.size() + " files found");
 	  }
   }
-  
+
+  /*
+   * Generates filter to be used in the method filter()
+   * based on contents of filter.txt.
+   * Words tagged with # are used in partial filter,
+   * and words tagged with $ are used in exact filter.
+   */
   private static void generateFilter(String fileName) {
 	  try(BufferedReader br = new BufferedReader(new FileReader(FILTER))) {
 		  for(String line; (line = br.readLine()) != null; ) {
@@ -96,48 +118,64 @@ public class GenerateOntologies {
 		  // line is not visible here.
   }
   
+  /*
+   * Produces list of keywords OR ontologies, and inserts them into
+   * keywords.csv and/or uris.csv. Uses generateKeywords(), curate,
+   * appendKeywords(), listURIs, and eliminateDuplicates.
+   */
   private static void generateFiles(ArrayList<String> xmlList) {
-	try {
-	  FileWriter writer = new FileWriter(CSV_FILE);
-	  writer.append("File Name");
-	  writer.append(',');
-	  writer.append("Keywords");
-	  writer.append('\n');
+	  try {
+		  if (keyword_csv == true) {
+			  FileWriter writer = new FileWriter(CSV_FILE);
+			  writer.append("File Name");
+			  writer.append(',');
+			  writer.append("Keywords");
+			  writer.append('\n');
 
-	  writer.flush();
-	  writer.close(); //open and close new csv file with keywords
-	  
-	  FileWriter writerURIs = new FileWriter(CSV_FILE_URIs);
-	  writerURIs.append("File Name");
-	  writerURIs.append(',');
-	  writerURIs.append("URIs");
-	  writerURIs.append('\n');
+			  writer.flush();
+			  writer.close(); //open and close new csv file with keywords
+		  }
+		  if (ontology_csv == true) {
+			  FileWriter writerURIs = new FileWriter(CSV_FILE_URIs);
+			  writerURIs.append("File Name");
+			  writerURIs.append(',');
+			  writerURIs.append("URIs");
+			  writerURIs.append('\n');
 
-	  writerURIs.flush();
-	  writerURIs.close(); //open and close new csv file with uris
-	  
-	  for (int a = 0; a < xmlList.size(); a++) { // for each xml file
-		  ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a))); // get the file's keywords
-		  ArrayList<String> finalKeywords = new ArrayList<String>(curate(keywords)); // filter keywords
-		  appendKeywords(finalKeywords, CSV_FILE); // write keywords to csv file
+			  writerURIs.flush();
+			  writerURIs.close(); //open and close new csv file with uris
+		  }
 		  
-		  if (finalKeywords.size() > 1) {
-			  ArrayList<String> URIs = new ArrayList<String>(listURIs(finalKeywords)); //generate file name + list of keywords
-			  ArrayList<String> finalURIs = new ArrayList<String>(eliminateDuplicates(URIs));
-			  appendKeywords(finalURIs, CSV_FILE_URIs); // write uris to second csv file
-		  }
-		  else {
-			  appendKeywords(finalKeywords, CSV_FILE_URIs); // write just file name to second csv file
-		  }
-	  } //end appending keywords for each xml file loop
-	  
-	} //end try
-	
-	catch (Exception e) {
-		e.printStackTrace();
-		}
+		  for (int a = 0; a < xmlList.size(); a++) { // for each xml file
+			  ArrayList<String> keywords = new ArrayList<String>(generateKeywords(xmlList.get(a))); // get the file's keywords
+			  ArrayList<String> finalKeywords = new ArrayList<String>(curate(keywords)); // filter keywords
+			  if (keyword_csv == true) {
+				  appendKeywords(finalKeywords, CSV_FILE); // write keywords to csv file
+			  }
+			  if (ontology_csv == true) {
+				  if (finalKeywords.size() > 1) {
+					  ArrayList<String> URIs = new ArrayList<String>(listURIs(finalKeywords)); //generate file name + list of uris
+					  ArrayList<String> finalURIs = new ArrayList<String>(eliminateDuplicates(URIs));
+					  appendKeywords(finalURIs, CSV_FILE_URIs); // write uris to second csv file
+				  }
+				  else {
+					  appendKeywords(finalKeywords, CSV_FILE_URIs); // write just file name to second csv file
+				  }
+			  } //end appending ontologies
+		  } //end appending keywords for each xml file loop
+
+	  } //end try
+
+	  catch (Exception e) {
+		  e.printStackTrace();
+	  }
   }
   
+  /*
+   * Generates a ArrayList<String> containing the file name and all of its keywords.
+   * Keywords are those marked with dc:subject, gmd:keyword, or
+   * themekey in the xml file.
+   */
   private static ArrayList<String> generateKeywords(String sFileName) {
 	  try
 	  {
@@ -151,7 +189,7 @@ public class GenerateOntologies {
 		  doc.getDocumentElement().normalize();
 		  
 		  ArrayList<String> results = new ArrayList<String>();
-		  results.add(fXmlFile.getName());
+		  results.add(sFileName.substring(67, (sFileName.length()) ));
 		  
 		  
 		  // start keyword generation for dc:subject
@@ -206,7 +244,9 @@ public class GenerateOntologies {
 
   }
  
-  
+  /*
+   * Runs split(), filter(), and eliminateDuplicates() methods to curate keywords
+   */
   private static ArrayList<String> curate (ArrayList<String> wordList) {
 	  ArrayList<String> wordList2 = new ArrayList<String>(split(wordList));
 	  ArrayList<String> wordList3 = new ArrayList<String>(filter(wordList2));
@@ -215,6 +255,10 @@ public class GenerateOntologies {
 	  return wordList4;
   }
   
+  /*
+   * For keywords that contain multiple keywords within,
+   * splits them into separate keywords based on commas and greater-than signs.
+   */
   private static ArrayList<String> split (ArrayList<String> wordList) {
 	  ArrayList<String> newWordList = new ArrayList<String>();
 	  for (int i = 0; i < wordList.size(); i++) {
@@ -235,6 +279,11 @@ public class GenerateOntologies {
 	  return newWordList;
   }
   
+  /*
+   * Using the filter produced by generateFilter(), eliminates
+   * keywords by partial and exact match.
+   * Also filters out a few other particular formats.
+   */
   private static ArrayList<String> filter (ArrayList<String> wordList) {
 
 	  for (int i = wordList.size() - 1; i >= 0; i--) { // filter partial match
@@ -271,6 +320,11 @@ public class GenerateOntologies {
 
   }
   
+  /*
+   * Checks length of each keyword for any abnormally long keywords
+   * that may indicate the keyword is actually comprised of multiple
+   * keywords in one entry. Returns file name and keyword if found.
+   */
   private static void checkLength (ArrayList<String> wordList) {
 	  for (int i = 0; i < wordList.size(); i++) {
 			if (wordList.get(i).length() > 150) {
@@ -279,7 +333,9 @@ public class GenerateOntologies {
 		}
   }
   
-  
+  /*
+   * Eliminates duplicates in the given ArrayList. Case-insensitive
+   */
   private static ArrayList<String> eliminateDuplicates (ArrayList<String> wordList) {
 	  ArrayList<String> newList= new ArrayList<String>();
 	  newList.add(wordList.get(0)); // initialize newList with the file name; size = 1
@@ -302,8 +358,10 @@ public class GenerateOntologies {
 	  return newList;
   }
   
-  
-  
+  /*
+   * Inserts given list of either keywords or URIs into respective
+   * csv file, with file name as first entry in each row.
+   */
   private static void appendKeywords(ArrayList<String> keywordList, String fileName) {
 	try {  
 	  FileWriter writer = new FileWriter(fileName, true); // append to csv file
@@ -332,10 +390,18 @@ public class GenerateOntologies {
 		}
   }
   
+  /*
+   * Prints a confirmation message once the program is done running.
+   */
   private static void confirmationDone() {
 	  System.out.println("The .csv files have been successfully generated.");
   }
   
+  /*
+   * Returns list of ontology URIs based on keywords.
+   * Gets ontology URIs from the tikki scigraph
+   * First entry of list is still the file name.
+   */
   private static ArrayList<String> listURIs (ArrayList<String> keywords) {
 	  try {
 		  ArrayList<String> URIs = new ArrayList<String>();
