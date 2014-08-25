@@ -4,12 +4,15 @@ uris.csv contains the ontologies (URIs) for each xml file
 uris_small.csv is a small sample of uris.csv
 filter.txt contains the words to be filtered
 
+Database tables should be created before running GenerateOntologies2.java.
+CREATE table Keywords2 (id int not null auto_increment, file_name varchar(80) not null, keyword varchar(180), primary key (id));
+CREATE table Ontologies2 (id int not null auto_increment, file_name varchar(80) not null, ontology varchar(180), primary key (id));
 
 
 Java files contain final variables that should be changed on other computers.
 The latest .java files for use:
 
-GenerateOntologies.java - Parses xml files for keywords, filters them, and then generates a list of ontologies in the form of URIs for each xml file based on those keywords. Writes keywords to keywords.csv and ontologies to uris.csv. Path names for the xml files’ location and results.csv location are specific to Grace’s computer.
+GenerateOntologies.java - Parses xml files for keywords, filters them, and then generates a list of ontologies in the form of URIs for each xml file based on those keywords. Writes keywords to keywords.csv and ontologies to uris.csv. Path names for the xml files’ location and keywords.csv location are specific to Grace’s computer.
 
 GenerateOntologies2.java - Does the same as GeneratesOntologies.java, but writes to a MySQL database instead to .csv files. Can write EITHER keywords OR ontologies table; haven’t yet figured out a good way to specify writing to one, both, or neither. Path names for the xml files’ location, and the mysql database credentials and table name, are specific to Grace’s computer.
 
